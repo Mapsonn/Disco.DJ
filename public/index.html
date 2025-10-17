@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlugDJ Clone - Reproductor Colaborativo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <!-- Modal de bienvenida -->
+    <div id="welcome-modal" class="modal">
+        <div class="modal-content">
+            <h1 data-i18n="welcome">🎵 Bienvenido</h1>
+            <p data-i18n="enter-username">Ingresa tu nombre de usuario para comenzar</p>
+            <input type="text" id="username-input" data-i18n="your-name" placeholder="Tu nombre..." maxlength="20">
+            <button id="join-btn" class="btn btn-primary" data-i18n="enter">Entrar</button>
+        </div>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div id="app" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1>🎵 PlugDJ Clone</h1>
+                <div class="room-info">
+                    <span id="room-id-display"></span>
+                    <button id="copy-link-btn" class="btn btn-small" data-i18n-title="copy-link" title="Copiar enlace de la sala">
+                        📋 <span data-i18n="copy-link">Copiar Link</span>
+                    </button>
+                </div>
+            </div>
+            <div class="header-right">
+                <select id="language-selector" class="language-selector" title="Idioma">
+                    <option value="es">🇪🇸 ES</option>
+                    <option value="en">🇬🇧 EN</option>
+                </select>
+                <button id="theme-toggle" class="btn btn-icon" title="Cambiar tema">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button id="disco-btn" class="btn btn-disco">🕺 <span data-i18n="disco">Disco</span></button>
+                <span id="username-display"></span>
+                <span class="user-count">👥 <span id="user-count">1</span></span>
+            </div>
+        </header>
+
+        <!-- Contenido principal -->
+        <div class="main-content">
+            <!-- Panel izquierdo - Lista de usuarios -->
+            <aside class="sidebar sidebar-left">
+                <h3 data-i18n="online-users">Usuarios en línea</h3>
+                <div id="users-list" class="users-list"></div>
+                <div class="dj-transfer-hint" id="dj-transfer-hint" style="display: none;">
+                    💡 <span data-i18n="click-to-transfer">Haz clic en un usuario para transferir el rol de DJ</span>
+                </div>
+            </aside>
+
+            <!-- Centro - Reproductor -->
+            <main class="player-section">
+                <div class="video-container">
+                    <div id="player"></div>
+                    <div id="no-video-message" class="no-video">
+                        <h2 data-i18n="empty-queue">No hay videos en la cola</h2>
+                        <p>Agrega un video de YouTube para comenzar</p>
+                    </div>
+                </div>
+                
+                <div class="current-video-info">
+                    <h3 id="current-video-title" data-i18n="no-video">Sin video</h3>
+                    <p id="current-video-addedby"></p>
+                </div>
+
+                <div class="player-controls">
+                    <div class="controls-left">
+                        <div id="dj-badge" class="dj-badge" style="display: none;">
+                            <span class="dj-icon">🎧</span>
+                            <span class="dj-text">DJ</span>
+                        </div>
+                    </div>
+                    <div class="controls-center">
+                        <button id="skip-btn" class="btn btn-secondary" disabled>⏭️ <span data-i18n="skip">Saltar</span></button>
+                        <button id="add-video-btn" class="btn btn-primary">➕ <span data-i18n="add-video">Agregar Video</span></button>
+                        <button id="sync-btn" class="btn btn-sync">🔄 <span data-i18n="sync">SYNC</span></button>
+                    </div>
+                    <div class="controls-right"></div>
+                </div>
+
+                <!-- Discoteca integrada -->
+                <div id="disco-section" class="disco-section" style="display: none;">
+                    <div class="disco-header-inline">
+                        <h3>🎵 Discoteca - ¡Baila con todos! 🎵</h3>
+                        <button id="toggle-disco-btn" class="btn btn-small">Ocultar</button>
+                    </div>
+                    <div class="disco-stage">
+                        <!-- Luces superiores -->
+                        <div class="disco-lights">
+                            <div class="disco-light light-1"></div>
+                            <div class="disco-light light-2"></div>
+                            <div class="disco-light light-3"></div>
+                            <div class="disco-light light-4"></div>
+                            <div class="disco-light light-5"></div>
+                        </div>
+                        
+                        <!-- Escenario principal -->
+                        <div class="disco-floor-container">
+                            <canvas id="disco-canvas" width="800" height="400"></canvas>
+                            <div id="disco-users"></div>
+                            
+                            <!-- DJ Booth -->
+                            <div class="dj-booth">
+                                <div class="dj-booth-light"></div>
+                                <div class="dj-booth-text">DJ BOOTH</div>
+                            </div>
+                            
+                            <!-- Altavoces -->
+                            <div class="speaker speaker-left">
+                                <div class="speaker-cone"></div>
+                                <div class="speaker-cone"></div>
+                            </div>
+                            <div class="speaker speaker-right">
+                                <div class="speaker-cone"></div>
+                                <div class="speaker-cone"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Info panel -->
+                        <div class="disco-sidebar">
+                            <div class="disco-info-box">
+                                <h4>👥 <span data-i18n="dancing-now">Bailando ahora</span></h4>
+                                <div id="disco-users-list"></div>
+                            </div>
+                            
+                            <div class="disco-controls-panel">
+                                <h4>🎮 <span data-i18n="controls">Controles</span></h4>
+                                <div class="control-hint">
+                                    <span class="control-keys">🖱️</span>
+                                    <span>Arrastra para mover</span>
+                                </div>
+                                <div class="control-hint">
+                                    <span class="control-keys">1-5</span>
+                                    <span data-i18n="emotes">Emotes</span>
+                                </div>
+                                <div class="emotes-preview">
+                                    <span title="1">🎉</span>
+                                    <span title="2">💃</span>
+                                    <span title="3">🕺</span>
+                                    <span title="4">❤️</span>
+                                    <span title="5">⭐</span>
+                                </div>
+                            </div>
+                            
+                            <button id="change-avatar-btn" class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;">
+                                🎭 <span data-i18n="change-avatar">Cambiar Avatar</span>
+                            </button>
+                            <div class="disco-tip">
+                                <p>💡 <span data-i18n="click-to-move">Haz clic en la pista para moverte</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Panel derecho - Cola y Chat -->
+            <aside class="sidebar sidebar-right">
+                <div class="right-panel-tabs">
+                    <button id="tab-queue" class="tab-btn active">📋 <span data-i18n="queue">Cola</span></button>
+                    <button id="tab-chat" class="tab-btn">💬 <span data-i18n="chat">Chat</span></button>
+                </div>
+
+                <!-- Cola de reproducción -->
+                <div id="queue-panel" class="panel-content">
+                    <div id="queue-list" class="queue-list">
+                        <div class="empty-queue">La cola está vacía</div>
+                    </div>
+                </div>
+
+                <!-- Panel de Chat -->
+                <div id="chat-panel" class="panel-content" style="display: none;">
+                    <div class="chat-mode-selector">
+                        <label class="switch">
+                            <input type="checkbox" id="chat-mode-switch">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="chat-mode-label">Chat Local</span>
+                    </div>
+
+                    <!-- Chat Local -->
+                    <div id="local-chat" class="chat-container">
+                        <div id="chat-messages" class="chat-messages"></div>
+                        <div class="chat-input-container">
+                            <input type="text" id="chat-input" placeholder="Escribe un mensaje..." maxlength="200">
+                            <button id="send-chat-btn" class="btn btn-primary">📤</button>
+                        </div>
+                    </div>
+
+                    <!-- Chat de Twitch -->
+                    <div id="twitch-chat" class="twitch-chat-container" style="display: none;">
+                        <div class="twitch-setup">
+                            <p>Conecta tu canal de Twitch</p>
+                            <input type="text" id="twitch-channel-input" placeholder="Nombre del canal...">
+                            <button id="connect-twitch-btn" class="btn btn-primary">Conectar</button>
+                        </div>
+                        <iframe id="twitch-chat-embed" frameborder="0" scrolling="no" style="display: none;"></iframe>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Modal para agregar video -->
+    <div id="add-video-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Agregar Video de YouTube</h2>
+            <p>Pega el enlace del video de YouTube</p>
+            <input type="text" id="video-url-input" placeholder="https://www.youtube.com/watch?v=...">
+            <div class="modal-buttons">
+                <button id="confirm-add-btn" class="btn btn-primary">Agregar</button>
+                <button id="cancel-add-btn" class="btn btn-secondary">Cancelar</button>
+            </div>
+            <div id="video-error" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Modal de selección de avatar -->
+    <div id="avatar-modal" class="modal" style="display: none;">
+        <div class="modal-content avatar-selection">
+            <h2>Elige tu avatar</h2>
+            <p>Crea tu pixel art o sube una imagen/GIF</p>
+            
+            <div class="avatar-type-selector">
+                <button id="create-pixel-art-btn" class="btn btn-primary">🎨 Crear Pixel Art</button>
+                <button id="upload-image-btn" class="btn btn-primary">📷 Subir Imagen/GIF</button>
+            </div>
+
+            <div id="saved-avatars-section" style="display: none;">
+                <h3>Tus avatares guardados</h3>
+                <div id="saved-avatars-grid" class="avatars-grid"></div>
+            </div>
+
+            <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display: none;">
+            <button id="close-avatar-modal" class="btn btn-secondary">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Modal de editor de pixel art -->
+    <div id="pixel-editor-modal" class="modal" style="display: none;">
+        <div class="modal-content pixel-editor-container">
+            <h2>Editor de Pixel Art</h2>
+            <p>Tamaño: <span id="canvas-size-display">32x32</span></p>
+            
+            <div class="editor-controls">
+                <div class="tool-selector">
+                    <button id="tool-draw" class="tool-btn active" title="Dibujar">✏️</button>
+                    <button id="tool-erase" class="tool-btn" title="Borrar">🧹</button>
+                    <button id="tool-fill" class="tool-btn" title="Rellenar">🪣</button>
+                </div>
+                
+                <div class="color-selector">
+                    <label>Color:</label>
+                    <input type="color" id="pixel-color" value="#000000">
+                    <div class="color-palette">
+                        <div class="palette-color" style="background: #000000" data-color="#000000"></div>
+                        <div class="palette-color" style="background: #ffffff" data-color="#ffffff"></div>
+                        <div class="palette-color" style="background: #ff0000" data-color="#ff0000"></div>
+                        <div class="palette-color" style="background: #00ff00" data-color="#00ff00"></div>
+                        <div class="palette-color" style="background: #0000ff" data-color="#0000ff"></div>
+                        <div class="palette-color" style="background: #ffff00" data-color="#ffff00"></div>
+                        <div class="palette-color" style="background: #ff00ff" data-color="#ff00ff"></div>
+                        <div class="palette-color" style="background: #00ffff" data-color="#00ffff"></div>
+                        <div class="palette-color" style="background: #ffa500" data-color="#ffa500"></div>
+                        <div class="palette-color" style="background: #8b4513" data-color="#8b4513"></div>
+                    </div>
+                </div>
+
+                <div class="size-selector">
+                    <label>Tamaño:</label>
+                    <select id="canvas-size-select">
+                        <option value="16">16x16</option>
+                        <option value="32" selected>32x32</option>
+                        <option value="48">48x48</option>
+                        <option value="64">64x64</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="pixel-canvas" width="512" height="512"></canvas>
+            </div>
+
+            <div class="editor-actions">
+                <button id="clear-canvas-btn" class="btn btn-secondary">🗑️ Limpiar</button>
+                <button id="save-pixel-art-btn" class="btn btn-primary">💾 Guardar Avatar</button>
+                <button id="close-pixel-editor-btn" class="btn btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificaciones -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Cargar YouTube API primero -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- Nuestro script después -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+
