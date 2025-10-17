@@ -4,7 +4,7 @@ A web application to watch YouTube videos in sync with friends, featuring shared
 
 ---
 
-<img src="img/igloo party.png" alt="README IMAGE">
+<img src="img/igloo party.png" alt="README IMAGE" width="500" heigth="500">
 
 ---
 
