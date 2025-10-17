@@ -3,7 +3,9 @@
 A web application to watch YouTube videos in sync with friends, featuring shared queue, virtual disco, and chat. Built with Node.js, Express, and Socket.io.
 
 ---
+
 <img src="img/igloo party.png" alt="README IMAGE" width="200">
+
 ---
 
 ## ✨ Features
