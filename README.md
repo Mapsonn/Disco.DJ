@@ -1,106 +1,132 @@
-# PlugDJ Clone - Reproductor Colaborativo
+# 🎵 Plug.DJ Clone - Watch Videos with Friends
 
-Una aplicación web que permite a múltiples usuarios unirse a una sala y compartir videos de YouTube en una cola de reproducción sincronizada en tiempo real.
+A web application to watch YouTube videos in sync with friends, featuring shared queue, virtual disco, and chat.
 
-## 🎵 Características
+## 🌐 Deploy to the Internet
 
-- **Reproductor de YouTube integrado** - Reproduce videos directamente en la aplicación
-- **Sistema multi-usuario** - Múltiples personas pueden unirse a la misma sala
-- **Cola de reproducción compartida** - Los videos se organizan en una cola visible para todos
-- **Sincronización en tiempo real** - Todos los usuarios ven el mismo video al mismo tiempo
-- **Sistema de salas** - Cada URL única crea una sala diferente
-- **Interfaz moderna** - Diseño inspirado en plug.dj con colores vibrantes
-- **Gestión de usuarios** - Ve quién está en línea en tiempo real
+### Option 1: Render (Free, Recommended) ⭐
 
-## 📋 Requisitos
+1. **Create Render account**
+   - Go to https://render.com
+   - Sign up with GitHub/Google
 
-- Node.js (versión 14 o superior)
-- npm (viene con Node.js)
+2. **Upload code to GitHub**
+   ```bash
+   cd "F:\CODING\Proyectosd\Plug.dj"
+   git init
+   git add .
+   git commit -m "Initial commit"
+   # Create a repo on GitHub and follow the instructions
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+   git push -u origin main
+   ```
 
-## 🚀 Instalación
+3. **Create Web Service on Render**
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+   - Configuration:
+     - **Name**: plug-dj-clone (or whatever you want)
+     - **Environment**: Node
+     - **Build Command**: `npm install`
+     - **Start Command**: `npm start`
+     - **Plan**: Free
+   - Click "Create Web Service"
 
-1. Abre una terminal en la carpeta del proyecto
+4. **Done!** 🎉
+   - Render will give you a URL like: `https://your-app.onrender.com`
+   - Share that link with your friends
 
-2. Instala las dependencias:
-```bash
-npm install
-```
-
-## ▶️ Uso
-
-1. Inicia el servidor:
-```bash
-npm start
-```
-
-2. Abre tu navegador en:
-```
-http://localhost:3000
-```
-
-3. Ingresa tu nombre de usuario
-
-4. ¡Comienza a agregar videos de YouTube!
-
-## 🔗 Compartir con amigos
-
-1. Haz clic en el botón "📋 Copiar Link" en la parte superior
-2. Comparte el link con tus amigos
-3. Todos verán el mismo contenido sincronizado
-
-## 🎮 Cómo usar
-
-1. **Agregar videos**: Haz clic en "➕ Agregar Video" y pega un enlace de YouTube
-2. **Cola de reproducción**: Los videos se reproducen automáticamente en orden
-3. **Saltar videos**: Usa el botón "⏭️ Saltar" para pasar al siguiente video
-4. **Ver usuarios**: El panel izquierdo muestra todos los usuarios conectados
-5. **Gestionar cola**: Elimina videos de la cola con el botón "×"
-
-## 🛠️ Tecnologías utilizadas
-
-- **Backend**: Node.js + Express
-- **WebSockets**: Socket.io para comunicación en tiempo real
-- **Reproductor**: YouTube IFrame API
-- **Frontend**: HTML5, CSS3, JavaScript vanilla
-
-## 📱 Responsive
-
-La aplicación es totalmente responsive y se adapta a diferentes tamaños de pantalla (desktop, tablet, móvil).
-
-## 🔧 Modo desarrollo
-
-Para desarrollo con auto-reload:
-```bash
-npm run dev
-```
-(Requiere instalar nodemon)
-
-## 🌐 Despliegue en producción
-
-Puedes desplegar esta aplicación en servicios como:
-- Heroku
-- Railway
-- Render
-- DigitalOcean
-- AWS
-
-Recuerda configurar el puerto usando variables de entorno si es necesario.
-
-## 📝 Notas
-
-- Los videos deben ser de YouTube y estar disponibles públicamente
-- La sincronización puede variar ligeramente dependiendo de la conexión de cada usuario
-- Las salas se eliminan automáticamente cuando todos los usuarios se desconectan
-
-## 🤝 Contribuciones
-
-¡Las contribuciones son bienvenidas! Siéntete libre de mejorar el código.
-
-## 📄 Licencia
-
-MIT License - Siéntete libre de usar este proyecto como desees.
+**Note**: On the free plan, the app "sleeps" after 15 min of inactivity and takes ~30 sec to wake up.
 
 ---
 
-**Disfruta compartiendo música y videos con tus amigos! 🎵**
+### Option 2: Railway (Free with $5 credit) 🚂
 
+1. **Create account**
+   - Go to https://railway.app
+   - Sign up with GitHub
+
+2. **Deploy**
+   - Click "New Project" → "Deploy from GitHub repo"
+   - Select your repository
+   - Railway will automatically detect it's Node.js
+   - Auto deploy! 🚀
+
+3. **Get URL**
+   - Go to "Settings" → "Domains"
+   - Click "Generate Domain"
+   - Share the URL with your friends
+
+---
+
+### Option 3: ngrok (For Quick Testing Only) ⚡
+
+**WARNING**: This option is temporary, the URL changes every time.
+
+1. **Install ngrok**
+   - Download from https://ngrok.com/download
+   - Extract and put `ngrok.exe` in a folder
+
+2. **Run your server locally**
+   ```bash
+   cd "F:\CODING\Proyectosd\Plug.dj"
+   npm install
+   node server.js
+   ```
+
+3. **In another terminal, run ngrok**
+   ```bash
+   ngrok http 3000
+   ```
+
+4. **Share URL**
+   - ngrok will give you a URL like: `https://xxxx-xx-xx-xx-xx.ngrok.io`
+   - Share that URL with your friends
+   - **The URL expires when you close ngrok**
+
+---
+
+## 🛠️ Local Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Run server
+npm start
+
+# Open in browser
+http://localhost:3000
+```
+
+## ✨ Features
+
+- 📺 Synchronized YouTube player
+- 🎵 Shared video queue
+- 🎧 DJ role (first to enter)
+- 🕺 Virtual disco with custom avatars
+- 💬 Local chat
+- 🎨 Pixel art editor
+- 🖼️ GIF support
+- 🌓 Dark/light mode
+- 🌍 Spanish/English
+
+## 🎮 Controls
+
+- **DJ**: Can skip videos, remove from queue, sync playback
+- **Everyone**: Can add videos, enter the disco, chat
+- **Disco**: Drag your character with the mouse, emotes with keys 1-5
+
+## 🔧 Technologies
+
+- Node.js
+- Express
+- Socket.io
+- YouTube Iframe API
+
+## 📝 Notes
+
+- The first user automatically becomes DJ
+- The DJ can transfer their role by clicking on another user
+- Videos play in queue order
+- The disco is optional and visual
