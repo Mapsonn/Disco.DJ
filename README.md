@@ -1,4 +1,4 @@
-# 🎵 Igloo.DJ - Watch Videos with Friends
+## 🎵 Igloo.DJ - Watch Videos with Friends
 
 A web application to watch YouTube videos in sync with friends, featuring shared queue, virtual disco, and chat. Built with Node.js, Express, and Socket.io.
 
@@ -71,6 +71,7 @@ Want to share with friends online? Here are some options:
 1. Create account at https://render.com
 2. Upload your code to GitHub
 3. Create a "Web Service" on Render:
+   - **Name**: igloo-dj (or whatever you want)
    - **Environment**: Node
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`

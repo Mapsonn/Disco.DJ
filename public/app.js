@@ -36,7 +36,7 @@ initTheme();
 
 // ==================== SISTEMA DE IDIOMAS ====================
 
-let currentLang = localStorage.getItem('language') || 'es';
+let currentLang = localStorage.getItem('language') || 'en';
 
 const translations = {
     es: {
@@ -66,7 +66,10 @@ const translations = {
         // Video
         'no-video': 'Sin video',
         'add-video': 'Agregar Video',
+        'add-youtube-video': 'Agregar Video de YouTube',
+        'paste-youtube-link': 'Pega el enlace del video de YouTube',
         'youtube-url': 'URL de YouTube',
+        'youtube-url-placeholder': 'https://www.youtube.com/watch?v=...',
         'paste-url': 'Pega aquí el link de YouTube...',
         'add': 'Agregar',
         'cancel': 'Cancelar',
@@ -77,6 +80,7 @@ const translations = {
         'only-dj-sync': 'Solo el DJ puede sincronizar',
         'video-synced': 'Video sincronizado por el DJ a',
         'added-by': 'Agregado por',
+        'add-youtube-to-start': 'Agrega un video de YouTube para comenzar',
         
         // Cola
         'queue': 'Cola',
@@ -95,6 +99,8 @@ const translations = {
         'show': 'Mostrar',
         'dancing-now': 'Bailando ahora',
         'click-to-move': 'Haz clic o usa WASD para moverte',
+        'drag-to-move': 'Arrastra para mover',
+        'disco-tip': 'Haz clic en la pista para moverte',
         'change-avatar': 'Cambiar Avatar',
         'controls': 'Controles',
         'move': 'Mover',
@@ -168,7 +174,10 @@ const translations = {
         // Video
         'no-video': 'No video',
         'add-video': 'Add Video',
+        'add-youtube-video': 'Add YouTube Video',
+        'paste-youtube-link': 'Paste the YouTube video link',
         'youtube-url': 'YouTube URL',
+        'youtube-url-placeholder': 'https://www.youtube.com/watch?v=...',
         'paste-url': 'Paste YouTube link here...',
         'add': 'Add',
         'cancel': 'Cancel',
@@ -179,6 +188,7 @@ const translations = {
         'only-dj-sync': 'Only the DJ can sync',
         'video-synced': 'Video synced by DJ at',
         'added-by': 'Added by',
+        'add-youtube-to-start': 'Add a YouTube video to start',
         
         // Queue
         'queue': 'Queue',
@@ -197,6 +207,8 @@ const translations = {
         'show': 'Show',
         'dancing-now': 'Dancing now',
         'click-to-move': 'Click or use WASD to move',
+        'drag-to-move': 'Drag to move',
+        'disco-tip': 'Click on the floor to move',
         'change-avatar': 'Change Avatar',
         'controls': 'Controls',
         'move': 'Move',
@@ -432,7 +444,10 @@ function updateUsersList(users) {
                 
                 // No transferir a uno mismo
                 if (targetUserId !== socket.id) {
-                    if (confirm(`¿Transferir el rol de DJ a ${targetUsername}?`)) {
+                    const confirmMsg = currentLang === 'es' 
+                        ? `¿Transferir el rol de DJ a ${targetUsername}?`
+                        : `Transfer DJ role to ${targetUsername}?`;
+                    if (confirm(confirmMsg)) {
                         socket.emit('transfer-dj', { newDJId: targetUserId });
                     }
                 }
@@ -473,7 +488,7 @@ function updateQueue(queue) {
     
     if (queue.length === 0) {
         console.log('  - Cola vacía, mostrando mensaje');
-        queueList.innerHTML = '<div class="empty-queue">La cola está vacía</div>';
+        queueList.innerHTML = `<div class="empty-queue" data-i18n="empty-queue">${t('empty-queue')}</div>`;
         return;
     }
     
@@ -491,7 +506,7 @@ function updateQueue(queue) {
                     ${video.duration !== 'N/A' && video.duration !== undefined ? `⏱️ ${formatDuration(video.duration)}` : ''} 
                     ${video.views !== 'N/A' && video.views !== undefined ? `${video.duration !== 'N/A' && video.duration !== undefined ? '•' : ''} 👁️ ${formatViews(video.views)}` : ''}
                 </div>
-                <div class="queue-item-user">Por ${video.addedBy}</div>
+                <div class="queue-item-user">${t('added-by')} ${video.addedBy}</div>
             </div>
             <button class="queue-item-remove" onclick="removeVideo('${video.id}')" title="Eliminar">×</button>
         </div>
@@ -594,9 +609,9 @@ function updateCurrentVideoInfo(video) {
     
     if (video) {
         titleEl.textContent = video.title;
-        addedByEl.textContent = `Agregado por ${video.addedBy}`;
+        addedByEl.textContent = `${t('added-by')} ${video.addedBy}`;
     } else {
-        titleEl.textContent = 'Sin video';
+        titleEl.textContent = t('no-video');
         addedByEl.textContent = '';
     }
 }
@@ -703,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
         welcomeModal.style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('username-display').textContent = username;
-        document.getElementById('room-id-display').textContent = `Sala: ${currentRoomId}`;
+        document.getElementById('room-id-display').textContent = `${t('room')}: ${currentRoomId}`;
         
         // Conectar a Socket.io
         initSocket();
@@ -747,14 +762,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const videoId = extractVideoId(url);
         
         if (!videoId) {
-            videoError.textContent = 'URL de YouTube inválida';
+            videoError.textContent = t('invalid-url');
             videoError.style.display = 'block';
             return;
         }
         
         const videoInfo = await getVideoInfo(videoId);
         if (!videoInfo) {
-            videoError.textContent = 'No se pudo obtener información del video';
+            videoError.textContent = t('invalid-url');
             videoError.style.display = 'block';
             return;
         }
@@ -762,7 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('➕ Enviando video al servidor:', videoInfo);
         socket.emit('add-video', videoInfo);
         addVideoModal.style.display = 'none';
-        showNotification('Video agregado a la cola');
+        showNotification(t('add-video') + ' ✓');
     });
     
     // Skip video
@@ -1279,11 +1294,11 @@ function toggleDisco() {
     
     if (discoVisible) {
         discoSection.style.display = 'block';
-        toggleBtn.textContent = 'Ocultar';
+        toggleBtn.textContent = t('hide');
         openDisco();
     } else {
         discoSection.style.display = 'none';
-        toggleBtn.textContent = 'Mostrar';
+        toggleBtn.textContent = t('show');
         
         // Detener arrastre si está activo
         isDragging = false;
@@ -1351,7 +1366,7 @@ function displaySavedAvatars() {
                 <div class="saved-avatar-preview">
                     <img src="${avatar.data}" alt="Avatar ${index + 1}">
                 </div>
-                <span>${avatar.type === 'pixelart' ? 'Pixel Art' : avatar.type === 'gif' ? 'GIF' : 'Imagen'}</span>
+                <span>${avatar.type === 'pixelart' ? t('pixel-art') : avatar.type === 'gif' ? 'GIF' : t('image')}</span>
             </div>
         `).join('');
         
@@ -1613,7 +1628,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         timestamp: Date.now()
                     });
                     saveavatarsToStorage();
-                    showNotification(`✅ GIF cargado!`);
+                    showNotification(`✅ GIF ${currentLang === 'es' ? 'cargado' : 'loaded'}!`);
                     displaySavedAvatars();
                 } else {
                     // Redimensionar imagen a 64x64
@@ -1727,11 +1742,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const twitchChat = document.getElementById('twitch-chat');
         
         if (isTwitchMode) {
-            label.textContent = 'Chat Twitch';
+            label.textContent = t('twitch-chat');
             localChat.style.display = 'none';
             twitchChat.style.display = 'block';
         } else {
-            label.textContent = 'Chat Local';
+            label.textContent = t('local-chat');
             localChat.style.display = 'block';
             twitchChat.style.display = 'none';
         }
@@ -1842,7 +1857,7 @@ function loadTwitchChat(channel) {
     // Crear interfaz del chat
     const chatInterface = document.createElement('div');
     chatInterface.className = 'twitch-chat-interface';
-    chatInterface.innerHTML = `
+            chatInterface.innerHTML = `
         <div class="twitch-channel-header">
             <div class="twitch-channel-info">
                 <div class="twitch-logo">
@@ -1852,11 +1867,11 @@ function loadTwitchChat(channel) {
                 </div>
                 <div>
                     <div class="twitch-channel-name">${channel}</div>
-                    <div class="twitch-channel-status">Chat de Twitch</div>
+                    <div class="twitch-channel-status">${t('twitch-chat')}</div>
                 </div>
             </div>
             <button class="twitch-back-btn" onclick="document.querySelector('.twitch-setup').style.display='block'; this.closest('.twitch-chat-interface').remove();">
-                ← Cambiar
+                ← ${t('change')}
             </button>
         </div>
         
@@ -1864,8 +1879,8 @@ function loadTwitchChat(channel) {
             <div class="twitch-info-box">
                 <div class="twitch-info-icon">ℹ️</div>
                 <div>
-                    <div class="twitch-info-title">El chat requiere ventana externa</div>
-                    <div class="twitch-info-text">Por restricciones de Twitch, el chat funciona mejor en una ventana separada.</div>
+                    <div class="twitch-info-title">${t('external-window-required')}</div>
+                    <div class="twitch-info-text">${t('twitch-restrictions')}</div>
                 </div>
             </div>
             
@@ -1873,11 +1888,11 @@ function loadTwitchChat(channel) {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
                 </svg>
-                Abrir Chat de Twitch
+                ${t('open-twitch-chat')}
             </button>
             
             <div class="twitch-alternative">
-                <p>También puedes ver el canal en:</p>
+                <p>${t('also-view')}</p>
                 <a href="https://www.twitch.tv/${channel}" target="_blank" class="twitch-link">
                     twitch.tv/${channel} →
                 </a>

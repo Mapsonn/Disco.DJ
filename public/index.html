@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlugDJ Clone - Reproductor Colaborativo</title>
+    <title>Igloo.dj - Watch Together</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-left">
-                <h1>🎵 PlugDJ Clone</h1>
+                <h1>🎵 Igloo.dj</h1>
                 <div class="room-info">
                     <span id="room-id-display"></span>
                     <button id="copy-link-btn" class="btn btn-small" data-i18n-title="copy-link" title="Copiar enlace de la sala">
@@ -65,7 +65,7 @@
                     <div id="player"></div>
                     <div id="no-video-message" class="no-video">
                         <h2 data-i18n="empty-queue">No hay videos en la cola</h2>
-                        <p>Agrega un video de YouTube para comenzar</p>
+                        <p data-i18n="add-youtube-to-start">Agrega un video de YouTube para comenzar</p>
                     </div>
                 </div>
                 
@@ -92,8 +92,8 @@
                 <!-- Discoteca integrada -->
                 <div id="disco-section" class="disco-section" style="display: none;">
                     <div class="disco-header-inline">
-                        <h3>🎵 Discoteca - ¡Baila con todos! 🎵</h3>
-                        <button id="toggle-disco-btn" class="btn btn-small">Ocultar</button>
+                        <h3 data-i18n="disco-dancing">🎵 Discoteca - ¡Baila con todos! 🎵</h3>
+                        <button id="toggle-disco-btn" class="btn btn-small" data-i18n="hide">Ocultar</button>
                     </div>
                     <div class="disco-stage">
                         <!-- Luces superiores -->
@@ -138,7 +138,7 @@
                                 <h4>🎮 <span data-i18n="controls">Controles</span></h4>
                                 <div class="control-hint">
                                     <span class="control-keys">🖱️</span>
-                                    <span>Arrastra para mover</span>
+                                    <span data-i18n="drag-to-move">Arrastra para mover</span>
                                 </div>
                                 <div class="control-hint">
                                     <span class="control-keys">1-5</span>
@@ -157,7 +157,7 @@
                                 🎭 <span data-i18n="change-avatar">Cambiar Avatar</span>
                             </button>
                             <div class="disco-tip">
-                                <p>💡 <span data-i18n="click-to-move">Haz clic en la pista para moverte</span></p>
+                                <p>💡 <span data-i18n="disco-tip">Haz clic en la pista para moverte</span></p>
                             </div>
                         </div>
                     </div>
@@ -174,7 +174,7 @@
                 <!-- Cola de reproducción -->
                 <div id="queue-panel" class="panel-content">
                     <div id="queue-list" class="queue-list">
-                        <div class="empty-queue">La cola está vacía</div>
+                        <div class="empty-queue" data-i18n="empty-queue">La cola está vacía</div>
                     </div>
                 </div>
 
@@ -185,14 +185,14 @@
                             <input type="checkbox" id="chat-mode-switch">
                             <span class="slider"></span>
                         </label>
-                        <span id="chat-mode-label">Chat Local</span>
+                        <span id="chat-mode-label" data-i18n="local-chat">Chat Local</span>
                     </div>
 
                     <!-- Chat Local -->
                     <div id="local-chat" class="chat-container">
                         <div id="chat-messages" class="chat-messages"></div>
                         <div class="chat-input-container">
-                            <input type="text" id="chat-input" placeholder="Escribe un mensaje..." maxlength="200">
+                            <input type="text" id="chat-input" data-i18n="type-message" placeholder="Escribe un mensaje..." maxlength="200">
                             <button id="send-chat-btn" class="btn btn-primary">📤</button>
                         </div>
                     </div>
@@ -200,9 +200,9 @@
                     <!-- Chat de Twitch -->
                     <div id="twitch-chat" class="twitch-chat-container" style="display: none;">
                         <div class="twitch-setup">
-                            <p>Conecta tu canal de Twitch</p>
-                            <input type="text" id="twitch-channel-input" placeholder="Nombre del canal...">
-                            <button id="connect-twitch-btn" class="btn btn-primary">Conectar</button>
+                            <p data-i18n="connect-twitch">Conecta tu canal de Twitch</p>
+                            <input type="text" id="twitch-channel-input" data-i18n="channel-name" placeholder="Nombre del canal...">
+                            <button id="connect-twitch-btn" class="btn btn-primary" data-i18n="connect">Conectar</button>
                         </div>
                         <iframe id="twitch-chat-embed" frameborder="0" scrolling="no" style="display: none;"></iframe>
                     </div>
@@ -214,12 +214,12 @@
     <!-- Modal para agregar video -->
     <div id="add-video-modal" class="modal" style="display: none;">
         <div class="modal-content">
-            <h2>Agregar Video de YouTube</h2>
-            <p>Pega el enlace del video de YouTube</p>
-            <input type="text" id="video-url-input" placeholder="https://www.youtube.com/watch?v=...">
+            <h2 data-i18n="add-youtube-video">Agregar Video de YouTube</h2>
+            <p data-i18n="paste-youtube-link">Pega el enlace del video de YouTube</p>
+            <input type="text" id="video-url-input" data-i18n="youtube-url-placeholder" placeholder="https://www.youtube.com/watch?v=...">
             <div class="modal-buttons">
-                <button id="confirm-add-btn" class="btn btn-primary">Agregar</button>
-                <button id="cancel-add-btn" class="btn btn-secondary">Cancelar</button>
+                <button id="confirm-add-btn" class="btn btn-primary" data-i18n="add">Agregar</button>
+                <button id="cancel-add-btn" class="btn btn-secondary" data-i18n="cancel">Cancelar</button>
             </div>
             <div id="video-error" class="error-message" style="display: none;"></div>
         </div>
@@ -228,39 +228,39 @@
     <!-- Modal de selección de avatar -->
     <div id="avatar-modal" class="modal" style="display: none;">
         <div class="modal-content avatar-selection">
-            <h2>Elige tu avatar</h2>
-            <p>Crea tu pixel art o sube una imagen/GIF</p>
+            <h2 data-i18n="choose-avatar">Elige tu avatar</h2>
+            <p data-i18n="create-or-upload">Crea tu pixel art o sube una imagen/GIF</p>
             
             <div class="avatar-type-selector">
-                <button id="create-pixel-art-btn" class="btn btn-primary">🎨 Crear Pixel Art</button>
-                <button id="upload-image-btn" class="btn btn-primary">📷 Subir Imagen/GIF</button>
+                <button id="create-pixel-art-btn" class="btn btn-primary">🎨 <span data-i18n="create-pixel-art">Crear Pixel Art</span></button>
+                <button id="upload-image-btn" class="btn btn-primary">📷 <span data-i18n="upload-image">Subir Imagen/GIF</span></button>
             </div>
 
             <div id="saved-avatars-section" style="display: none;">
-                <h3>Tus avatares guardados</h3>
+                <h3 data-i18n="saved-avatars">Tus avatares guardados</h3>
                 <div id="saved-avatars-grid" class="avatars-grid"></div>
             </div>
 
             <input type="file" id="avatar-file-input" accept="image/*,image/gif" style="display: none;">
-            <button id="close-avatar-modal" class="btn btn-secondary">Cancelar</button>
+            <button id="close-avatar-modal" class="btn btn-secondary" data-i18n="cancel">Cancelar</button>
         </div>
     </div>
 
     <!-- Modal de editor de pixel art -->
     <div id="pixel-editor-modal" class="modal" style="display: none;">
         <div class="modal-content pixel-editor-container">
-            <h2>Editor de Pixel Art</h2>
-            <p>Tamaño: <span id="canvas-size-display">32x32</span></p>
+            <h2 data-i18n="pixel-editor">Editor de Pixel Art</h2>
+            <p><span data-i18n="size">Tamaño</span>: <span id="canvas-size-display">32x32</span></p>
             
             <div class="editor-controls">
                 <div class="tool-selector">
-                    <button id="tool-draw" class="tool-btn active" title="Dibujar">✏️</button>
-                    <button id="tool-erase" class="tool-btn" title="Borrar">🧹</button>
-                    <button id="tool-fill" class="tool-btn" title="Rellenar">🪣</button>
+                    <button id="tool-draw" class="tool-btn active" data-i18n-title="draw" title="Dibujar">✏️</button>
+                    <button id="tool-erase" class="tool-btn" data-i18n-title="erase" title="Borrar">🧹</button>
+                    <button id="tool-fill" class="tool-btn" data-i18n-title="fill" title="Rellenar">🪣</button>
                 </div>
                 
                 <div class="color-selector">
-                    <label>Color:</label>
+                    <label data-i18n="color">Color</label>:
                     <input type="color" id="pixel-color" value="#000000">
                     <div class="color-palette">
                         <div class="palette-color" style="background: #000000" data-color="#000000"></div>
@@ -277,7 +277,7 @@
                 </div>
 
                 <div class="size-selector">
-                    <label>Tamaño:</label>
+                    <label data-i18n="size">Tamaño</label>:
                     <select id="canvas-size-select">
                         <option value="16">16x16</option>
                         <option value="32" selected>32x32</option>
@@ -292,9 +292,9 @@
             </div>
 
             <div class="editor-actions">
-                <button id="clear-canvas-btn" class="btn btn-secondary">🗑️ Limpiar</button>
-                <button id="save-pixel-art-btn" class="btn btn-primary">💾 Guardar Avatar</button>
-                <button id="close-pixel-editor-btn" class="btn btn-secondary">Cancelar</button>
+                <button id="clear-canvas-btn" class="btn btn-secondary">🗑️ <span data-i18n="clear">Limpiar</span></button>
+                <button id="save-pixel-art-btn" class="btn btn-primary">💾 <span data-i18n="save-avatar">Guardar Avatar</span></button>
+                <button id="close-pixel-editor-btn" class="btn btn-secondary" data-i18n="cancel">Cancelar</button>
             </div>
         </div>
     </div>

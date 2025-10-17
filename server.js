@@ -6,13 +6,13 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 
-// Servir archivos estáticos
+// Serve static files
 app.use(express.static('public'));
 
-// Estructura para almacenar las salas
+// Structure to store rooms
 const rooms = new Map();
 
-// Estructura de una sala
+// Room structure
 class Room {
   constructor(roomId) {
     this.id = roomId;
@@ -21,17 +21,17 @@ class Room {
     this.currentVideo = null;
     this.currentVideoStartTime = null;
     this.isPlaying = false;
-    this.discoUsers = new Map(); // Usuarios en la discoteca con avatares y posiciones
-    this.djSocketId = null; // ID del DJ actual
-    this.syncTime = 0; // Tiempo sincronizado del video
+    this.discoUsers = new Map(); // Users in disco with avatars and positions
+    this.djSocketId = null; // Current DJ ID
+    this.syncTime = 0; // Synced video time
   }
 
   addUser(socketId, username) {
-    // El primer usuario es DJ
+    // First user is DJ
     const isDJ = this.users.size === 0;
     this.users.set(socketId, { id: socketId, username, isDJ });
     
-    // Si es DJ, guardarlo
+    // If DJ, save it
     if (isDJ) {
       this.djSocketId = socketId;
     }
@@ -41,7 +41,7 @@ class Room {
     this.users.delete(socketId);
     this.discoUsers.delete(socketId);
     
-    // Si el DJ se desconecta, asignar nuevo DJ
+    // If DJ disconnects, assign new DJ
     if (socketId === this.djSocketId && this.users.size > 0) {
       const newDJ = Array.from(this.users.keys())[0];
       const user = this.users.get(newDJ);
@@ -66,13 +66,13 @@ class Room {
   }
   
   transferDJ(fromSocketId, toSocketId) {
-    // Remover DJ del usuario actual
+    // Remove DJ from current user
     const fromUser = this.users.get(fromSocketId);
     if (fromUser) {
       fromUser.isDJ = false;
     }
     
-    // Asignar DJ al nuevo usuario
+    // Assign DJ to new user
     const toUser = this.users.get(toSocketId);
     if (toUser) {
       toUser.isDJ = true;
@@ -119,7 +119,7 @@ class Room {
   }
 }
 
-// Función para obtener o crear una sala
+// Function to get or create a room
 function getOrCreateRoom(roomId) {
   if (!rooms.has(roomId)) {
     rooms.set(roomId, new Room(roomId));
@@ -128,10 +128,10 @@ function getOrCreateRoom(roomId) {
 }
 
 io.on('connection', (socket) => {
-  console.log('Usuario conectado:', socket.id);
+  console.log('User connected:', socket.id);
   let currentRoom = null;
 
-  // Unirse a una sala
+  // Join a room
   socket.on('join-room', (data) => {
     const { roomId, username } = data;
     currentRoom = roomId;
@@ -140,12 +140,12 @@ io.on('connection', (socket) => {
     const room = getOrCreateRoom(roomId);
     room.addUser(socket.id, username);
 
-    console.log(`${username} se unió a la sala ${roomId}`);
+    console.log(`${username} joined room ${roomId}`);
 
     const user = room.users.get(socket.id);
     const isDJ = user ? user.isDJ : false;
 
-    // Enviar estado actual de la sala al usuario que se une
+    // Send current room state to joining user
     socket.emit('room-state', {
       users: room.getUsers(),
       queue: room.queue,
@@ -157,7 +157,7 @@ io.on('connection', (socket) => {
       syncTime: room.syncTime
     });
 
-    // Notificar a todos los usuarios de la sala sobre el nuevo usuario
+    // Notify all users in the room about the new user
     io.to(roomId).emit('user-joined', {
       users: room.getUsers(),
       username: username,
@@ -165,14 +165,14 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Agregar video a la cola
+  // Add video to queue
   socket.on('add-video', (data) => {
     if (!currentRoom) return;
 
     const room = rooms.get(currentRoom);
     const user = room.users.get(socket.id);
     
-    console.log('📥 Video recibido del cliente:', data);
+    console.log('📥 Video received from client:', data);
     
     const video = {
       id: data.videoId,
@@ -184,70 +184,70 @@ io.on('connection', (socket) => {
       timestamp: Date.now()
     };
 
-    console.log('💾 Video procesado:', video);
-    console.log('🎬 Video actual antes de agregar:', room.currentVideo ? 'SÍ hay video' : 'NO hay video');
-    console.log('📋 Cola antes de agregar:', room.queue.length, 'videos');
+    console.log('💾 Video processed:', video);
+    console.log('🎬 Current video before adding:', room.currentVideo ? 'YES video' : 'NO video');
+    console.log('📋 Queue before adding:', room.queue.length, 'videos');
 
     room.addToQueue(video);
-    console.log('📋 Cola después de agregar:', room.queue.length, 'videos');
+    console.log('📋 Queue after adding:', room.queue.length, 'videos');
 
-    // Si no hay video reproduciéndose, iniciar el siguiente
+    // If no video playing, start next one
     if (!room.currentVideo) {
       const nextVideo = room.nextVideo();
-      console.log('▶️ Iniciando primer video:', nextVideo);
-      console.log('📋 Cola después de nextVideo():', room.queue.length, 'videos');
+      console.log('▶️ Starting first video:', nextVideo);
+      console.log('📋 Queue after nextVideo():', room.queue.length, 'videos');
       io.to(currentRoom).emit('play-video', {
         video: nextVideo,
         startTime: 0
       });
     } else {
-      console.log('✅ Video actual existe, agregando a cola solamente');
+      console.log('✅ Current video exists, only adding to queue');
     }
 
-    // Notificar a todos sobre la actualización de la cola
-    console.log('📤 Enviando queue-updated con', room.queue.length, 'videos');
+    // Notify everyone about queue update
+    console.log('📤 Sending queue-updated with', room.queue.length, 'videos');
     io.to(currentRoom).emit('queue-updated', {
       queue: room.queue
     });
   });
 
-  // Video terminado
+  // Video ended
   socket.on('video-ended', () => {
     if (!currentRoom) return;
 
-    console.log('🏁 Video terminado, buscando siguiente...');
+    console.log('🏁 Video ended, looking for next...');
     const room = rooms.get(currentRoom);
-    console.log('📋 Cola antes de nextVideo():', room.queue.length, 'videos');
+    console.log('📋 Queue before nextVideo():', room.queue.length, 'videos');
     
     const nextVideo = room.nextVideo();
-    console.log('📋 Cola después de nextVideo():', room.queue.length, 'videos');
+    console.log('📋 Queue after nextVideo():', room.queue.length, 'videos');
 
     if (nextVideo) {
-      console.log('▶️ Reproduciendo siguiente video:', nextVideo.title);
+      console.log('▶️ Playing next video:', nextVideo.title);
       io.to(currentRoom).emit('play-video', {
         video: nextVideo,
         startTime: 0
       });
     } else {
-      console.log('❌ No hay más videos en la cola');
+      console.log('❌ No more videos in queue');
       io.to(currentRoom).emit('queue-empty');
     }
 
-    console.log('📤 Enviando queue-updated con', room.queue.length, 'videos');
+    console.log('📤 Sending queue-updated with', room.queue.length, 'videos');
     io.to(currentRoom).emit('queue-updated', {
       queue: room.queue
     });
   });
 
-  // Remover video de la cola (solo DJ)
+  // Remove video from queue (DJ only)
   socket.on('remove-video', (videoId) => {
     if (!currentRoom) return;
 
     const room = rooms.get(currentRoom);
     
-    // Verificar que sea el DJ
+    // Verify it's the DJ
     if (!room.isDJUser(socket.id)) {
-      socket.emit('error-message', { message: 'Solo el DJ puede eliminar videos' });
+      socket.emit('error-message', { message: 'Only the DJ can remove videos' });
       return;
     }
     
@@ -258,15 +258,15 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Skip video actual (solo DJ)
+  // Skip current video (DJ only)
   socket.on('skip-video', () => {
     if (!currentRoom) return;
 
     const room = rooms.get(currentRoom);
     
-    // Verificar que sea el DJ
+    // Verify it's the DJ
     if (!room.isDJUser(socket.id)) {
-      socket.emit('error-message', { message: 'Solo el DJ puede saltar videos' });
+      socket.emit('error-message', { message: 'Only the DJ can skip videos' });
       return;
     }
 
@@ -288,77 +288,77 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Actualizar duración del video
+  // Update video duration
   socket.on('update-video-duration', (data) => {
     if (!currentRoom) return;
 
     const room = rooms.get(currentRoom);
     
-    // Actualizar duración en el video actual
+    // Update duration in current video
     if (room.currentVideo && room.currentVideo.id === data.videoId) {
       room.currentVideo.duration = data.duration;
     }
     
-    // Actualizar duración en la cola
+    // Update duration in queue
     room.queue.forEach(video => {
       if (video.id === data.videoId) {
         video.duration = data.duration;
       }
     });
 
-    // Notificar a todos
+    // Notify everyone
     io.to(currentRoom).emit('queue-updated', {
       queue: room.queue
     });
   });
 
-  // Reordenar cola (solo DJ)
+  // Reorder queue (DJ only)
   socket.on('reorder-queue', (data) => {
     if (!currentRoom) {
-      console.error('❌ reorder-queue: No hay sala actual');
+      console.error('❌ reorder-queue: No current room');
       return;
     }
 
     const room = rooms.get(currentRoom);
     
-    // Verificar que sea el DJ
+    // Verify it's the DJ
     if (!room.isDJUser(socket.id)) {
-      console.warn('⚠️ Usuario no-DJ intentó reordenar cola');
-      socket.emit('error-message', { message: 'Solo el DJ puede reordenar la cola' });
+      console.warn('⚠️ Non-DJ user tried to reorder queue');
+      socket.emit('error-message', { message: 'Only the DJ can reorder the queue' });
       return;
     }
 
     const { fromIndex, toIndex } = data;
     
-    console.log('🔄 ========== REORDENAR COLA ==========');
-    console.log('  - Desde índice:', fromIndex);
-    console.log('  - Hacia índice:', toIndex);
-    console.log('  - Cola antes:', room.queue.map((v, i) => `${i}: ${v.title}`));
+    console.log('🔄 ========== REORDER QUEUE ==========');
+    console.log('  - From index:', fromIndex);
+    console.log('  - To index:', toIndex);
+    console.log('  - Queue before:', room.queue.map((v, i) => `${i}: ${v.title}`));
     
-    // Validar índices
+    // Validate indices
     if (fromIndex < 0 || fromIndex >= room.queue.length || 
         toIndex < 0 || toIndex >= room.queue.length) {
-      console.error('❌ Índices inválidos');
+      console.error('❌ Invalid indices');
       return;
     }
     
-    // Reordenar el array
+    // Reorder array
     const [movedVideo] = room.queue.splice(fromIndex, 1);
     room.queue.splice(toIndex, 0, movedVideo);
     
-    console.log('  - Cola después:', room.queue.map((v, i) => `${i}: ${v.title}`));
-    console.log('  - Enviando queue-updated a todos los clientes');
+    console.log('  - Queue after:', room.queue.map((v, i) => `${i}: ${v.title}`));
+    console.log('  - Sending queue-updated to all clients');
 
-    // Notificar a todos sobre la actualización de la cola
+    // Notify everyone about queue update
     io.to(currentRoom).emit('queue-updated', {
       queue: room.queue
     });
     
-    console.log('✅ Cola reordenada y actualizada');
+    console.log('✅ Queue reordered and updated');
     console.log('========================================');
   });
 
-  // Entrar a la discoteca
+  // Enter disco
   socket.on('enter-disco', (data) => {
     if (!currentRoom) return;
 
@@ -368,28 +368,28 @@ io.on('connection', (socket) => {
     if (user) {
       room.addDiscoUser(socket.id, user.username, data.avatar, data.x, data.y);
       
-      // Enviar todos los usuarios en la disco al que acaba de entrar
+      // Send all disco users to the one who just entered
       socket.emit('disco-users-update', {
         users: room.getDiscoUsers()
       });
       
-      // Notificar a todos sobre el nuevo usuario en la disco
+      // Notify everyone about new user in disco
       io.to(currentRoom).emit('disco-users-update', {
         users: room.getDiscoUsers()
       });
       
-      console.log(`${user.username} entró a la discoteca con avatar ${data.avatar}`);
+      console.log(`${user.username} entered disco with avatar ${data.avatar}`);
     }
   });
 
-  // Mover en la discoteca
+  // Move in disco
   socket.on('move-in-disco', (data) => {
     if (!currentRoom) return;
 
     const room = rooms.get(currentRoom);
     room.updateDiscoUserPosition(socket.id, data.x, data.y);
     
-    // Notificar a todos sobre el movimiento
+    // Notify everyone about movement
     io.to(currentRoom).emit('user-moved', {
       socketId: socket.id,
       x: data.x,
@@ -397,42 +397,42 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Sincronizar tiempo del video (solo DJ)
+  // Sync video time (DJ only)
   socket.on('sync-video', () => {
     if (!currentRoom) return;
 
     const room = rooms.get(currentRoom);
     
-    // Verificar que sea el DJ
+    // Verify it's the DJ
     if (!room.isDJUser(socket.id)) {
-      socket.emit('error-message', { message: 'Solo el DJ puede sincronizar' });
+      socket.emit('error-message', { message: 'Only the DJ can sync' });
       return;
     }
 
-    // Calcular tiempo actual del video
+    // Calculate current video time
     if (room.currentVideo && room.currentVideoStartTime) {
       const elapsedTime = (Date.now() - room.currentVideoStartTime) / 1000;
       room.syncTime = elapsedTime;
       
-      // Notificar a todos para que sincronicen
+      // Notify everyone to sync
       io.to(currentRoom).emit('force-sync', {
         time: elapsedTime,
         video: room.currentVideo
       });
       
-      console.log(`DJ sincronizó el video en ${elapsedTime}s`);
+      console.log(`DJ synced video at ${elapsedTime}s`);
     }
   });
 
-  // Transferir rol de DJ
+  // Transfer DJ role
   socket.on('transfer-dj', (data) => {
     if (!currentRoom) return;
 
     const room = rooms.get(currentRoom);
     
-    // Verificar que sea el DJ actual
+    // Verify it's the current DJ
     if (!room.isDJUser(socket.id)) {
-      socket.emit('error-message', { message: 'Solo el DJ puede transferir el rol' });
+      socket.emit('error-message', { message: 'Only the DJ can transfer the role' });
       return;
     }
 
@@ -441,9 +441,9 @@ io.on('connection', (socket) => {
     const toUser = room.users.get(newDJId);
     
     if (toUser && fromUser) {
-      // Transferir el rol
+      // Transfer role
       if (room.transferDJ(socket.id, newDJId)) {
-        // Notificar a todos
+        // Notify everyone
         io.to(currentRoom).emit('dj-transferred', {
           users: room.getUsers(),
           djSocketId: room.getDJSocketId(),
@@ -453,7 +453,7 @@ io.on('connection', (socket) => {
           isDJ: false
         });
         
-        // Notificar al nuevo DJ específicamente
+        // Notify new DJ specifically
         io.to(newDJId).emit('dj-transferred', {
           users: room.getUsers(),
           djSocketId: room.getDJSocketId(),
@@ -463,12 +463,12 @@ io.on('connection', (socket) => {
           isDJ: true
         });
         
-        console.log(`DJ transferido de ${fromUser.username} a ${toUser.username}`);
+        console.log(`DJ transferred from ${fromUser.username} to ${toUser.username}`);
       }
     }
   });
 
-  // Mensaje de chat
+  // Chat message
   socket.on('chat-message', (data) => {
     if (!currentRoom) return;
 
@@ -476,7 +476,7 @@ io.on('connection', (socket) => {
     const user = room.users.get(socket.id);
     
     if (user) {
-      // Transmitir el mensaje a todos en la sala
+      // Broadcast message to everyone in room
       io.to(currentRoom).emit('chat-message', {
         username: data.username,
         message: data.message,
@@ -487,7 +487,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Emote en disco
+  // Disco emote
   socket.on('disco-emote', (data) => {
     if (!currentRoom) return;
     
@@ -497,9 +497,9 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Desconexión
+  // Disconnect
   socket.on('disconnect', () => {
-    console.log('Usuario desconectado:', socket.id);
+    console.log('User disconnected:', socket.id);
     
     if (currentRoom) {
       const room = rooms.get(currentRoom);
@@ -507,17 +507,17 @@ io.on('connection', (socket) => {
         const user = room.users.get(socket.id);
         room.removeUser(socket.id);
 
-        // Notificar a los demás usuarios
+        // Notify other users
         io.to(currentRoom).emit('user-left', {
           users: room.getUsers(),
-          username: user ? user.username : 'Usuario',
+          username: user ? user.username : 'User',
           djSocketId: room.getDJSocketId()
         });
 
-        // Limpiar sala si está vacía
+        // Clean up room if empty
         if (room.users.size === 0) {
           rooms.delete(currentRoom);
-          console.log(`Sala ${currentRoom} eliminada (vacía)`);
+          console.log(`Room ${currentRoom} deleted (empty)`);
         }
       }
     }
@@ -525,6 +525,6 @@ io.on('connection', (socket) => {
 });
 
 http.listen(PORT, () => {
-  console.log(`🎵 Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`🎵 Igloo.dj server running at http://localhost:${PORT}`);
 });
 
