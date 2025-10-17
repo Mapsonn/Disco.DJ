@@ -397,30 +397,53 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Sync video time (DJ only)
+  // Sync video time (DJ only - syncs everyone)
   socket.on('sync-video', () => {
     if (!currentRoom) return;
 
     const room = rooms.get(currentRoom);
-    
-    // Verify it's the DJ
-    if (!room.isDJUser(socket.id)) {
-      socket.emit('error-message', { message: 'Only the DJ can sync' });
-      return;
-    }
+    const user = room.users.get(socket.id);
 
     // Calculate current video time
     if (room.currentVideo && room.currentVideoStartTime) {
       const elapsedTime = (Date.now() - room.currentVideoStartTime) / 1000;
       room.syncTime = elapsedTime;
       
-      // Notify everyone to sync
+      // DJ syncs everyone
       io.to(currentRoom).emit('force-sync', {
         time: elapsedTime,
-        video: room.currentVideo
+        video: room.currentVideo,
+        syncedBy: 'dj'
       });
-      
-      console.log(`DJ synced video at ${elapsedTime}s`);
+      console.log(`DJ synced everyone at ${elapsedTime}s`);
+    }
+  });
+  
+  // Request sync time (for individual user sync)
+  socket.on('request-sync-time', () => {
+    console.log('📥 request-sync-time recibido de:', socket.id);
+    
+    if (!currentRoom) {
+      console.warn('⚠️ No hay currentRoom');
+      return;
+    }
+
+    const room = rooms.get(currentRoom);
+    console.log('📊 Estado de la sala:', {
+      hasCurrentVideo: !!room.currentVideo,
+      hasStartTime: !!room.currentVideoStartTime,
+      videoTitle: room.currentVideo?.title
+    });
+    
+    // Send current video state to requesting user
+    if (room.currentVideo && room.currentVideoStartTime) {
+      console.log('📤 Enviando sync-time-response a:', socket.id);
+      socket.emit('sync-time-response', {
+        currentVideo: room.currentVideo,
+        currentVideoStartTime: room.currentVideoStartTime
+      });
+    } else {
+      console.warn('⚠️ No hay video actual para sincronizar');
     }
   });
 

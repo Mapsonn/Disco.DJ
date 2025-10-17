@@ -462,13 +462,14 @@ function updateDJStatus() {
     const skipBtn = document.getElementById('skip-btn');
     const syncBtn = document.getElementById('sync-btn');
     
+    // El botón SYNC siempre está visible para todos
+    syncBtn.style.display = 'inline-block';
+    
     if (isDJ) {
         djBadge.style.display = 'flex';
-        syncBtn.style.display = 'inline-block';
         // El DJ siempre puede saltar (cuando hay video)
     } else {
         djBadge.style.display = 'none';
-        syncBtn.style.display = 'none';
         // Los no-DJ no pueden saltar
         skipBtn.disabled = true;
     }
@@ -679,6 +680,40 @@ function removeVideo(videoId) {
     socket.emit('remove-video', videoId);
 }
 
+// Sincronizar reproductor local (para usuarios no-DJ) - 100% local, sin servidor
+function syncLocalPlayer() {
+    console.log('🔄 syncLocalPlayer() llamada (local, sin servidor)');
+    console.log('  - player ready:', isPlayerReady);
+    console.log('  - localVideoStartTime:', localVideoStartTime);
+    
+    if (!player || !isPlayerReady) {
+        console.error('❌ Player no está listo');
+        showNotification('❌ Player not ready');
+        return;
+    }
+    
+    if (!localVideoStartTime) {
+        console.error('❌ No hay timestamp de inicio');
+        showNotification('❌ No video playing');
+        return;
+    }
+    
+    // Calcular tiempo transcurrido LOCALMENTE (sin servidor = 0ms latencia)
+    const elapsedTime = (Date.now() - localVideoStartTime) / 1000;
+    console.log('⏱️ Sincronizando localmente a:', elapsedTime, 'segundos');
+    
+    // Sincronizar inmediatamente
+    player.seekTo(elapsedTime, true);
+    
+    const msg = currentLang === 'es' 
+        ? `🔄 Sincronizado a ${Math.floor(elapsedTime)}s`
+        : `🔄 Synced to ${Math.floor(elapsedTime)}s`;
+    showNotification(msg);
+}
+
+// Variable para guardar el tiempo de inicio del video actual
+let localVideoStartTime = null;
+
 // Verificar si la API de YouTube se está cargando
 console.log('📺 Verificando carga de YouTube API...');
 console.log('  - YT disponible:', typeof YT !== 'undefined');
@@ -785,13 +820,17 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.emit('skip-video');
     });
     
-    // Botón SYNC
+    // Botón SYNC - Ahora disponible para todos
     document.getElementById('sync-btn').addEventListener('click', () => {
-        if (isDJ && player && isPlayerReady) {
-            socket.emit('sync-video');
-            showNotification(`🔄 ${t('syncing')}`);
-        } else if (!isDJ) {
-            showNotification(`❌ ${t('only-dj-sync')}`);
+        if (player && isPlayerReady) {
+            if (isDJ) {
+                // DJ sincroniza a todos a través del servidor
+                socket.emit('sync-video');
+                showNotification(`🔄 ${t('syncing')}`);
+            } else {
+                // Usuario normal se sincroniza localmente (sin latencia)
+                syncLocalPlayer();
+            }
         }
     });
 });
@@ -818,6 +857,7 @@ function initSocket() {
         
         if (data.currentVideo) {
             console.log('📺 Hay video actual, intentando reproducir...');
+            localVideoStartTime = data.currentVideoStartTime;
             const elapsedTime = (Date.now() - data.currentVideoStartTime) / 1000;
             playVideo(data.currentVideo, elapsedTime);
         } else {
@@ -866,7 +906,31 @@ function initSocket() {
         console.log('  - player existe:', !!player);
         console.log('  - pendingVideo actual:', pendingVideo);
         console.log('📺 ========================================');
+        localVideoStartTime = Date.now() - (data.startTime * 1000);
         playVideo(data.video, data.startTime);
+    });
+    
+    // Respuesta a solicitud de tiempo de sincronización
+    socket.on('sync-time-response', (data) => {
+        console.log('📥 sync-time-response recibido:', data);
+        console.log('  - player ready:', isPlayerReady);
+        console.log('  - currentVideo:', data.currentVideo);
+        
+        if (player && isPlayerReady && data.currentVideo) {
+            localVideoStartTime = data.currentVideoStartTime;
+            const elapsedTime = (Date.now() - data.currentVideoStartTime) / 1000;
+            console.log('⏱️ Sincronizando a:', elapsedTime, 'segundos');
+            player.seekTo(elapsedTime, true);
+            const msg = currentLang === 'es' 
+                ? `🔄 Sincronizado a ${Math.floor(elapsedTime)}s`
+                : `🔄 Synced to ${Math.floor(elapsedTime)}s`;
+            showNotification(msg);
+        } else {
+            console.warn('⚠️ No se pudo sincronizar:', {
+                playerReady: isPlayerReady,
+                hasCurrentVideo: !!data.currentVideo
+            });
+        }
     });
     
     // Cola vacía
@@ -877,11 +941,18 @@ function initSocket() {
         updateCurrentVideoInfo(null);
     });
     
-    // Sincronización forzada por DJ
+    // Sincronización forzada por DJ o propia
     socket.on('force-sync', (data) => {
         if (player && isPlayerReady && data.video) {
             player.seekTo(data.time, true);
-            showNotification(`🔄 ${t('video-synced')} ${Math.floor(data.time)}s`);
+            if (data.syncedBy === 'dj') {
+                showNotification(`🔄 ${t('video-synced')} ${Math.floor(data.time)}s`);
+            } else if (data.syncedBy === 'self') {
+                const msg = currentLang === 'es' 
+                    ? `🔄 Sincronizado a ${Math.floor(data.time)}s`
+                    : `🔄 Synced to ${Math.floor(data.time)}s`;
+                showNotification(msg);
+            }
         }
     });
     
