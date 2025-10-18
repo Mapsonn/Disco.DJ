@@ -255,11 +255,77 @@ body {
     font-weight: 600;
 }
 
-.user-count {
+/* User count con dropdown */
+.user-count-wrapper {
+    position: relative;
+}
+
+.user-count-btn {
     background: var(--bg-darker);
     padding: 8px 16px;
     border-radius: 20px;
     border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.user-count-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+}
+
+.users-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    min-width: 250px;
+    max-width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    animation: dropdownSlide 0.2s ease-out;
+}
+
+@keyframes dropdownSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.users-dropdown-header {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-darker);
+    border-radius: 12px 12px 0 0;
+}
+
+.users-dropdown-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.users-dropdown .users-list {
+    padding: 10px;
+}
+
+.users-dropdown .dj-transfer-hint {
+    margin: 10px;
 }
 
 /* Contenido principal */
@@ -278,6 +344,8 @@ body {
     padding: 15px;
     border: 1px solid var(--border-color);
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar h3 {
@@ -286,6 +354,7 @@ body {
     font-size: 16px;
     text-transform: uppercase;
     letter-spacing: 1px;
+    flex-shrink: 0;
 }
 
 /* Lista de usuarios */
@@ -346,6 +415,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    height: 100%;
+    overflow: hidden;
 }
 
 .video-container {
@@ -357,6 +428,27 @@ body {
     height: 0;
     padding-bottom: 45%;
     border: 1px solid var(--border-color);
+    flex-shrink: 0;
+    transition: padding-bottom 0.3s ease;
+}
+
+/* Video más pequeño cuando disco está abierto */
+.player-section:has(#disco-section:not([style*="display: none"])) .video-container {
+    padding-bottom: 32%;
+}
+
+/* Ocultar controles y info cuando disco está abierto */
+.player-section:has(#disco-section:not([style*="display: none"])) .player-controls {
+    display: none;
+}
+
+.player-section:has(#disco-section:not([style*="display: none"])) .current-video-info {
+    display: none;
+}
+
+/* Ocultar header de la disco para maximizar espacio */
+#disco-section:not([style*="display: none"]) .disco-header-inline {
+    display: none;
 }
 
 #player {
@@ -398,6 +490,7 @@ body {
     padding: 12px 16px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
 .current-video-info h3 {
@@ -414,6 +507,7 @@ body {
     display: flex;
     gap: 10px;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 /* Cola de reproducción */
@@ -421,6 +515,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .empty-queue {
@@ -773,13 +869,18 @@ body {
 
 /* Discoteca Integrada */
 .disco-section {
-    margin-top: 20px;
+    margin-top: 12px;
     background: linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%);
     border-radius: 20px;
     border: 3px solid #8338ec;
     overflow: hidden;
     box-shadow: 0 10px 40px rgba(131, 56, 236, 0.4);
     animation: borderGlow 3s infinite;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: fit-content;
 }
 
 @keyframes borderGlow {
@@ -796,6 +897,7 @@ body {
     border-bottom: 3px solid #ffbe0b;
     position: relative;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .disco-header-inline::before {
@@ -827,12 +929,29 @@ body {
     to { text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 0, 110, 0.8); }
 }
 
-.disco-stage {
-    display: grid;
-    grid-template-columns: 1fr 250px;
-    gap: 15px;
-    padding: 15px;
+/* Nuevo diseño compacto de disco */
+.disco-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    flex: 1;
     position: relative;
+    overflow: hidden;
+}
+
+/* Luces compactas */
+.disco-lights-compact {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    z-index: 10;
+    pointer-events: none;
 }
 
 /* Luces superiores */
@@ -887,19 +1006,335 @@ body {
     50% { opacity: 1; transform: scale(1.3); }
 }
 
-/* Pista de baile */
-.disco-floor-container {
-    position: relative;
-    background: linear-gradient(135deg, #1a1a2e 0%, #2d1b4e 100%);
-    border-radius: 15px;
-    border: 3px solid #ffbe0b;
-    overflow: hidden;
-    min-height: 300px;
-    max-height: 350px;
+/* Escenario del DJ */
+.dj-stage {
+    background: linear-gradient(180deg, #2c2c54 0%, #1a1a2e 100%);
+    border-radius: 10px;
+    padding: 10px;
+    border: 2px solid #8338ec;
+    box-shadow: 0 0 15px rgba(131, 56, 236, 0.5);
+    flex-shrink: 0;
+}
+
+.dj-platform {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: inset 0 0 50px rgba(131, 56, 236, 0.3);
+    gap: 12px;
+}
+
+/* Consola/Mezcladora de DJ */
+.dj-booth-compact {
+    background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 2px solid #2c2c2c;
+    position: relative;
+    box-shadow: 
+        0 0 15px rgba(255, 190, 11, 0.4),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Panel superior de la mezcladora */
+.dj-booth-compact::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 8px;
+    background: linear-gradient(90deg, 
+        #ff006e 0%, #8338ec 20%, #3a86ff 40%, #ffbe0b 60%, #fb5607 80%, #ff006e 100%);
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(255, 190, 11, 0.6);
+    animation: vuMeter 0.3s infinite;
+}
+
+@keyframes vuMeter {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* Controles de la mezcladora */
+.dj-booth-compact::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 12px;
+    background: repeating-linear-gradient(
+        90deg,
+        #333 0px,
+        #333 8px,
+        #555 8px,
+        #555 10px
+    );
+    border-radius: 3px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.dj-light-top {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    background: #ff006e;
+    border-radius: 50%;
+    box-shadow: 
+        0 0 25px #ff006e,
+        0 0 40px #ff006e,
+        inset 0 0 10px rgba(255, 255, 255, 0.5);
+    animation: djLight 1s infinite;
+}
+
+.dj-label {
+    color: #ffbe0b;
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(255, 190, 11, 0.8);
+    text-transform: uppercase;
+    padding: 8px 15px;
+    background: rgba(26, 26, 26, 0.8);
+    border-radius: 8px;
+    border: 1px solid #444;
+    position: relative;
+    z-index: 1;
+}
+
+/* Contenedor del DJ con spotlight */
+.dj-avatar-container {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, rgba(145, 70, 255, 0.4), transparent 70%);
+    border-radius: 50%;
+    animation: djSpotlight 2s infinite;
+    position: relative;
+}
+
+/* Haz de luz desde arriba */
+.dj-avatar-container::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 90px;
+    background: linear-gradient(180deg, 
+        rgba(255, 190, 11, 0.3) 0%,
+        rgba(145, 70, 255, 0.4) 50%,
+        transparent 100%
+    );
+    clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes djSpotlight {
+    0%, 100% { 
+        box-shadow: 
+            0 0 30px rgba(145, 70, 255, 0.6),
+            0 0 60px rgba(145, 70, 255, 0.4);
+    }
+    50% { 
+        box-shadow: 
+            0 0 50px rgba(255, 0, 110, 0.8),
+            0 0 80px rgba(255, 0, 110, 0.5);
+    }
+}
+
+/* Pista de baile compacta */
+.dance-floor-compact {
+    background: linear-gradient(135deg, #1a1a2e 0%, #2d1b4e 100%);
+    border-radius: 10px;
+    padding: 15px;
+    padding-top: 35px;
+    border: 2px solid #ffbe0b;
+    box-shadow: inset 0 0 25px rgba(131, 56, 236, 0.3);
+    flex: 1;
+    min-height: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.dancers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 15px;
+    justify-items: center;
+    align-items: center;
+}
+
+.dancer-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    animation: dancerBounce 0.6s infinite;
+    position: relative;
+    padding-top: 25px;
+}
+
+@keyframes dancerBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.dancer-avatar {
+    width: 50px;
+    height: 50px;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 12px rgba(131, 56, 236, 0.4));
+}
+
+.dancer-name {
+    background: linear-gradient(135deg, rgba(131, 56, 236, 0.9) 0%, rgba(255, 0, 110, 0.9) 100%);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid #ffbe0b;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+}
+
+/* Barra de emotes - diseño mejorado */
+.disco-emotes-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(131, 56, 236, 0.3) 0%, rgba(58, 134, 255, 0.3) 100%);
+    padding: 10px;
+    border-radius: 12px;
+    border: 2px solid #8338ec;
+    flex-shrink: 0;
+    box-shadow: 
+        0 3px 12px rgba(0, 0, 0, 0.4),
+        inset 0 1px 3px rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.emotes-label {
+    color: #ffbe0b;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 190, 11, 0.6);
+    margin-right: 5px;
+}
+
+.emote-btn {
+    background: linear-gradient(135deg, rgba(131, 56, 236, 0.5), rgba(58, 134, 255, 0.5));
+    border: 2px solid #8338ec;
+    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.emote-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.emote-btn:hover {
+    background: linear-gradient(135deg, rgba(131, 56, 236, 0.8), rgba(58, 134, 255, 0.8));
+    transform: translateY(-4px) scale(1.15);
+    box-shadow: 
+        0 6px 20px rgba(131, 56, 236, 0.6),
+        0 0 30px rgba(131, 56, 236, 0.4);
+    border-color: #ffbe0b;
+}
+
+.emote-btn:hover::before {
+    width: 100px;
+    height: 100px;
+}
+
+.emote-btn:active {
+    transform: translateY(-2px) scale(1.05);
+}
+
+/* Botón de cambiar avatar en barra de emotes */
+.disco-emotes-bar .btn-secondary {
+    background: linear-gradient(135deg, rgba(255, 190, 11, 0.3), rgba(251, 86, 7, 0.3));
+    border: 2px solid #ffbe0b;
+    padding: 6px 12px;
+    height: 38px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    margin-left: 6px;
+    transition: all 0.3s;
+    font-size: 12px;
+}
+
+.disco-emotes-bar .btn-secondary:hover {
+    background: linear-gradient(135deg, rgba(255, 190, 11, 0.6), rgba(251, 86, 7, 0.6));
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 
+        0 6px 20px rgba(255, 190, 11, 0.6),
+        0 0 30px rgba(255, 190, 11, 0.4);
+}
+
+/* Emote flotante - más visible */
+.dancer-emote {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 32px;
+    animation: emoteFloat 2.5s ease-out forwards;
+    pointer-events: none;
+    z-index: 1000;
+    filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
+}
+
+@keyframes emoteFloat {
+    0% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-40px) scale(1.3);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-80px) scale(1.5);
+    }
 }
 
 #disco-canvas {
@@ -1020,6 +1455,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    overflow-y: auto;
+    max-height: 100%;
 }
 
 .disco-info-box {
@@ -1042,7 +1479,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-height: 250px;
+    max-height: 200px;
     overflow-y: auto;
 }
 
@@ -1719,40 +2156,16 @@ body {
 
 /* ==================== SISTEMA DE CHAT ==================== */
 
-/* Tabs del panel derecho */
-.right-panel-tabs {
+/* Sidebar derecho - solo chat sin tabs */
+.sidebar-right {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    background: var(--bg-darker);
-    padding: 5px;
-    border-radius: 10px;
+    flex-direction: column;
 }
 
-.tab-btn {
-    flex: 1;
-    padding: 10px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    font-size: 14px;
-}
-
-.tab-btn:hover {
-    background: rgba(108, 99, 255, 0.3);
-}
-
-.tab-btn.active {
-    background: var(--primary-color);
-    color: white;
-}
-
-.panel-content {
-    height: calc(100% - 70px);
-    overflow-y: auto;
+.sidebar-right h3 {
+    margin-bottom: 16px;
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
 /* Sistema de Chat */
@@ -1760,10 +2173,11 @@ body {
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-bottom: 20px;
-    padding: 15px;
+    margin-bottom: 16px;
+    padding: 12px;
     background: var(--bg-darker);
-    border-radius: 10px;
+    border-radius: 8px;
+    flex-shrink: 0;
 }
 
 .switch {
@@ -1820,12 +2234,19 @@ input:checked + .slider:before {
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: calc(100% - 80px);
+    flex: 1;
+    overflow: hidden;
+}
+
+#local-chat {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
 }
 
 .chat-messages {
     flex: 1;
-    max-height: 500px;
     overflow-y: auto;
     padding: 15px;
     background: var(--bg-tertiary);
@@ -1875,6 +2296,7 @@ input:checked + .slider:before {
 .chat-input-container {
     display: flex;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 #chat-input {

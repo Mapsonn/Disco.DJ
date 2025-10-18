@@ -994,15 +994,7 @@ function initSocket() {
     
     // Recibir emotes en disco
     socket.on('disco-emote', (data) => {
-        const dancer = document.getElementById(`dancer-${data.socketId}`);
-        if (!dancer) return;
-        
-        const emoteEl = document.createElement('div');
-        emoteEl.className = 'disco-emote';
-        emoteEl.textContent = data.emote;
-        dancer.appendChild(emoteEl);
-        
-        setTimeout(() => emoteEl.remove(), 2000);
+        showEmote(data.socketId, data.emote);
     });
 }
 
@@ -1076,83 +1068,65 @@ function animateDiscoFloor() {
     animationFrame = requestAnimationFrame(animateDiscoFloor);
 }
 
-// Actualizar usuarios en la disco
+// Actualizar usuarios en la disco (diseño compacto)
 function updateDiscoUsers(users) {
-    const discoUsersContainer = document.getElementById('disco-users');
-    const discoUsersList = document.getElementById('disco-users-list');
+    const dancersGrid = document.getElementById('disco-dancers-grid');
+    const djAvatarSpot = document.getElementById('dj-avatar-spot');
     
-    // Limpiar contenedores
-    discoUsersContainer.innerHTML = '';
-    discoUsersList.innerHTML = '';
+    if (!dancersGrid || !djAvatarSpot) return;
+    
+    // Limpiar grilla
+    dancersGrid.innerHTML = '';
+    djAvatarSpot.innerHTML = '';
     
     users.forEach(user => {
-        // Agregar bailarín visual
-        const dancer = document.createElement('div');
-        dancer.className = 'disco-dancer';
-        dancer.id = `dancer-${user.socketId}`;
-        dancer.style.left = user.x + 'px';
-        dancer.style.top = user.y + 'px';
+        const isUserDJ = user.socketId === djSocketId;
         
-        const avatar = document.createElement('div');
-        avatar.className = 'custom-avatar-display';
+        // Crear avatar del usuario
+        const avatarElement = createAvatarElement(user);
         
-        // Verificar si tiene avatar personalizado
-        if (user.avatar && typeof user.avatar === 'object') {
-            const img = document.createElement('img');
-            img.src = user.avatar.data;
-            img.style.width = '64px';
-            img.style.height = '64px';
-            img.style.objectFit = 'cover';
-            img.style.borderRadius = (user.avatar.type === 'image' || user.avatar.type === 'gif') ? '50%' : '0';
-            img.style.imageRendering = user.avatar.type === 'pixelart' ? 'pixelated' : 'auto';
-            avatar.appendChild(img);
+        if (isUserDJ) {
+            // Si es DJ, va al escenario
+            djAvatarSpot.appendChild(avatarElement);
         } else {
-            // Avatar predeterminado
-            avatar.className = `pixel-avatar avatar-${user.avatar || 1}`;
+            // Si no es DJ, va a la grilla de bailarines
+            const dancerItem = document.createElement('div');
+            dancerItem.className = 'dancer-item';
+            dancerItem.id = `dancer-${user.socketId}`;
+            
+            dancerItem.appendChild(avatarElement);
+            
+            const dancerName = document.createElement('div');
+            dancerName.className = 'dancer-name';
+            dancerName.textContent = user.username;
+            dancerItem.appendChild(dancerName);
+            
+            dancersGrid.appendChild(dancerItem);
         }
-        
-        const label = document.createElement('div');
-        label.className = 'username-label';
-        label.textContent = user.username;
-        
-        dancer.appendChild(avatar);
-        dancer.appendChild(label);
-        discoUsersContainer.appendChild(dancer);
-        
-        // Agregar a lista
-        const userItem = document.createElement('div');
-        userItem.className = 'disco-user-item';
-        
-        const listAvatar = document.createElement('div');
-        listAvatar.style.width = '32px';
-        listAvatar.style.height = '32px';
-        listAvatar.style.display = 'inline-block';
-        listAvatar.style.marginRight = '10px';
-        
-        if (user.avatar && typeof user.avatar === 'object') {
-            const img = document.createElement('img');
-            img.src = user.avatar.data;
-            img.style.width = '100%';
-            img.style.height = '100%';
-            img.style.objectFit = 'cover';
-            img.style.borderRadius = (user.avatar.type === 'image' || user.avatar.type === 'gif') ? '50%' : '0';
-            img.style.imageRendering = user.avatar.type === 'pixelart' ? 'pixelated' : 'auto';
-            listAvatar.appendChild(img);
-        } else {
-            listAvatar.className = `pixel-avatar avatar-${user.avatar || 1}`;
-            listAvatar.style.transform = 'scale(0.5)';
-        }
-        
-        userItem.appendChild(listAvatar);
-        
-        const span = document.createElement('span');
-        span.textContent = user.username;
-        userItem.appendChild(span);
-        
-        discoUsersList.appendChild(userItem);
         
         discoUsers[user.socketId] = user;
     });
+}
+
+// Crear elemento de avatar
+function createAvatarElement(user) {
+    const avatar = document.createElement('div');
+    avatar.className = 'dancer-avatar';
+    
+    if (user.avatar && typeof user.avatar === 'object') {
+        const img = document.createElement('img');
+        img.src = user.avatar.data;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = (user.avatar.type === 'image' || user.avatar.type === 'gif') ? '50%' : '0';
+        img.style.imageRendering = user.avatar.type === 'pixelart' ? 'pixelated' : 'auto';
+        avatar.appendChild(img);
+    } else {
+        avatar.className = `pixel-avatar avatar-${user.avatar || 1} dancer-avatar`;
+    }
+    
+    return avatar;
 }
 
 // Actualizar posición de un usuario
@@ -1282,17 +1256,40 @@ document.addEventListener('keydown', (e) => {
         const emotes = ['🎉', '💃', '🕺', '❤️', '⭐'];
         const emote = emotes[parseInt(e.key) - 1];
         socket.emit('disco-emote', { emote });
-        showEmote(emote);
+        showEmote(socket.id, emote);
     }
 });
 
-// Mostrar emote local
-function showEmote(emote) {
-    const dancer = document.getElementById(`dancer-${socket.id}`);
-    if (!dancer) return;
+// Enviar emote
+function sendEmote(emote) {
+    if (!socket) return;
+    socket.emit('disco-emote', { emote });
+    showEmote(socket.id, emote);
+}
+
+// Mostrar emote en el nuevo diseño compacto
+function showEmote(socketId, emote) {
+    const dancer = document.getElementById(`dancer-${socketId}`);
+    if (!dancer) {
+        // Si no está en la grilla, puede ser el DJ
+        const djSpot = document.getElementById('dj-avatar-spot');
+        if (djSpot && socketId === djSocketId) {
+            const emoteEl = document.createElement('div');
+            emoteEl.className = 'dancer-emote';
+            emoteEl.textContent = emote;
+            emoteEl.style.position = 'absolute';
+            emoteEl.style.top = '-20px';
+            emoteEl.style.left = '50%';
+            djSpot.style.position = 'relative';
+            djSpot.appendChild(emoteEl);
+            
+            setTimeout(() => emoteEl.remove(), 2000);
+        }
+        return;
+    }
     
     const emoteEl = document.createElement('div');
-    emoteEl.className = 'disco-emote';
+    emoteEl.className = 'dancer-emote';
     emoteEl.textContent = emote;
     dancer.appendChild(emoteEl);
     
@@ -1327,6 +1324,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // Botones de emotes
+    const emoteButtons = document.querySelectorAll('.emote-btn');
+    emoteButtons.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            const emote = btn.getAttribute('data-emote');
+            sendEmote(emote);
+        });
+    });
+    
+    // Emotes con teclado (1-5)
+    document.addEventListener('keydown', (e) => {
+        if (discoVisible && !e.target.matches('input, textarea')) {
+            const emotes = ['🎉', '💃', '🕺', '❤️', '⭐'];
+            const key = parseInt(e.key);
+            if (key >= 1 && key <= 5) {
+                sendEmote(emotes[key - 1]);
+            }
+        }
+    });
+    
     toggleDiscoBtn.addEventListener('click', () => {
         toggleDisco();
     });
@@ -1351,7 +1368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const emotes = ['🎉', '💃', '🕺', '❤️', '⭐'];
             const emote = emotes[index];
             socket.emit('disco-emote', { emote });
-            showEmote(emote);
+            showEmote(socket.id, emote);
         });
     });
 });
@@ -1790,19 +1807,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // ==================== EVENT LISTENERS DEL CHAT ====================
     
-    // Tabs del panel derecho
-    document.getElementById('tab-queue').addEventListener('click', () => {
-        document.getElementById('tab-queue').classList.add('active');
-        document.getElementById('tab-chat').classList.remove('active');
-        document.getElementById('queue-panel').style.display = 'block';
-        document.getElementById('chat-panel').style.display = 'none';
+    // Dropdown de usuarios
+    const usersToggleBtn = document.getElementById('users-toggle-btn');
+    const usersDropdown = document.getElementById('users-dropdown');
+    
+    usersToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isVisible = usersDropdown.style.display === 'block';
+        usersDropdown.style.display = isVisible ? 'none' : 'block';
     });
 
-    document.getElementById('tab-chat').addEventListener('click', () => {
-        document.getElementById('tab-chat').classList.add('active');
-        document.getElementById('tab-queue').classList.remove('active');
-        document.getElementById('chat-panel').style.display = 'block';
-        document.getElementById('queue-panel').style.display = 'none';
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!usersDropdown.contains(e.target) && e.target !== usersToggleBtn) {
+            usersDropdown.style.display = 'none';
+        }
     });
 
     // Switch entre chat local y Twitch

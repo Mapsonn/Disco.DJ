@@ -44,18 +44,31 @@
                 </button>
                 <button id="disco-btn" class="btn btn-disco">🕺 <span data-i18n="disco">Disco</span></button>
                 <span id="username-display"></span>
-                <span class="user-count">👥 <span id="user-count">1</span></span>
+                <div class="user-count-wrapper">
+                    <button id="users-toggle-btn" class="user-count-btn">
+                        👥 <span id="user-count">1</span>
+                    </button>
+                    <!-- Dropdown de usuarios -->
+                    <div id="users-dropdown" class="users-dropdown" style="display: none;">
+                        <div class="users-dropdown-header">
+                            <h4 data-i18n="online-users">Usuarios en línea</h4>
+                        </div>
+                        <div id="users-list" class="users-list"></div>
+                        <div class="dj-transfer-hint" id="dj-transfer-hint" style="display: none;">
+                            💡 <span data-i18n="click-to-transfer">Haz clic en un usuario para transferir el rol de DJ</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
         <!-- Contenido principal -->
         <div class="main-content">
-            <!-- Panel izquierdo - Lista de usuarios -->
+            <!-- Panel izquierdo - Cola de reproducción -->
             <aside class="sidebar sidebar-left">
-                <h3 data-i18n="online-users">Usuarios en línea</h3>
-                <div id="users-list" class="users-list"></div>
-                <div class="dj-transfer-hint" id="dj-transfer-hint" style="display: none;">
-                    💡 <span data-i18n="click-to-transfer">Haz clic en un usuario para transferir el rol de DJ</span>
+                <h3 data-i18n="queue">Cola</h3>
+                <div id="queue-list" class="queue-list">
+                    <div class="empty-queue" data-i18n="empty-queue">La cola está vacía</div>
                 </div>
             </aside>
 
@@ -95,9 +108,10 @@
                         <h3 data-i18n="disco-dancing">🎵 Discoteca - ¡Baila con todos! 🎵</h3>
                         <button id="toggle-disco-btn" class="btn btn-small" data-i18n="hide">Ocultar</button>
                     </div>
-                    <div class="disco-stage">
+                    
+                    <div class="disco-compact">
                         <!-- Luces superiores -->
-                        <div class="disco-lights">
+                        <div class="disco-lights-compact">
                             <div class="disco-light light-1"></div>
                             <div class="disco-light light-2"></div>
                             <div class="disco-light light-3"></div>
@@ -105,107 +119,67 @@
                             <div class="disco-light light-5"></div>
                         </div>
                         
-                        <!-- Escenario principal -->
-                        <div class="disco-floor-container">
-                            <canvas id="disco-canvas" width="800" height="400"></canvas>
-                            <div id="disco-users"></div>
-                            
-                            <!-- DJ Booth -->
-                            <div class="dj-booth">
-                                <div class="dj-booth-light"></div>
-                                <div class="dj-booth-text">DJ BOOTH</div>
-                            </div>
-                            
-                            <!-- Altavoces -->
-                            <div class="speaker speaker-left">
-                                <div class="speaker-cone"></div>
-                                <div class="speaker-cone"></div>
-                            </div>
-                            <div class="speaker speaker-right">
-                                <div class="speaker-cone"></div>
-                                <div class="speaker-cone"></div>
+                        <!-- Escenario del DJ -->
+                        <div class="dj-stage">
+                            <div class="dj-platform">
+                                <div class="dj-booth-compact">
+                                    <div class="dj-light-top"></div>
+                                    <span class="dj-label">🎧 DJ BOOTH</span>
+                                </div>
+                                <div id="dj-avatar-spot" class="dj-avatar-container"></div>
                             </div>
                         </div>
                         
-                        <!-- Info panel -->
-                        <div class="disco-sidebar">
-                            <div class="disco-info-box">
-                                <h4>👥 <span data-i18n="dancing-now">Bailando ahora</span></h4>
-                                <div id="disco-users-list"></div>
-                            </div>
-                            
-                            <div class="disco-controls-panel">
-                                <h4>🎮 <span data-i18n="controls">Controles</span></h4>
-                                <div class="control-hint">
-                                    <span class="control-keys">🖱️</span>
-                                    <span data-i18n="drag-to-move">Arrastra para mover</span>
-                                </div>
-                                <div class="control-hint">
-                                    <span class="control-keys">1-5</span>
-                                    <span data-i18n="emotes">Emotes</span>
-                                </div>
-                                <div class="emotes-preview">
-                                    <span title="1">🎉</span>
-                                    <span title="2">💃</span>
-                                    <span title="3">🕺</span>
-                                    <span title="4">❤️</span>
-                                    <span title="5">⭐</span>
-                                </div>
-                            </div>
-                            
-                            <button id="change-avatar-btn" class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;">
-                                🎭 <span data-i18n="change-avatar">Cambiar Avatar</span>
+                        <!-- Pista con usuarios -->
+                        <div class="dance-floor-compact">
+                            <div id="disco-dancers-grid" class="dancers-grid"></div>
+                        </div>
+                        
+                        <!-- Controles de emotes -->
+                        <div class="disco-emotes-bar">
+                            <span class="emotes-label">Press 1-5:</span>
+                            <button class="emote-btn" data-emote="🎉">🎉</button>
+                            <button class="emote-btn" data-emote="💃">💃</button>
+                            <button class="emote-btn" data-emote="🕺">🕺</button>
+                            <button class="emote-btn" data-emote="❤️">❤️</button>
+                            <button class="emote-btn" data-emote="⭐">⭐</button>
+                            <button id="change-avatar-btn" class="btn btn-secondary btn-small">
+                                🎭 <span data-i18n="change-avatar">Avatar</span>
                             </button>
-                            <div class="disco-tip">
-                                <p>💡 <span data-i18n="disco-tip">Haz clic en la pista para moverte</span></p>
-                            </div>
                         </div>
                     </div>
                 </div>
             </main>
 
-            <!-- Panel derecho - Cola y Chat -->
+            <!-- Panel derecho - Chat -->
             <aside class="sidebar sidebar-right">
-                <div class="right-panel-tabs">
-                    <button id="tab-queue" class="tab-btn active">📋 <span data-i18n="queue">Cola</span></button>
-                    <button id="tab-chat" class="tab-btn">💬 <span data-i18n="chat">Chat</span></button>
+                <h3>💬 <span data-i18n="chat">Chat</span></h3>
+                
+                <div class="chat-mode-selector">
+                    <label class="switch">
+                        <input type="checkbox" id="chat-mode-switch">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="chat-mode-label" data-i18n="local-chat">Chat Local</span>
                 </div>
 
-                <!-- Cola de reproducción -->
-                <div id="queue-panel" class="panel-content">
-                    <div id="queue-list" class="queue-list">
-                        <div class="empty-queue" data-i18n="empty-queue">La cola está vacía</div>
+                <!-- Chat Local -->
+                <div id="local-chat" class="chat-container">
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" data-i18n="type-message" placeholder="Escribe un mensaje..." maxlength="200">
+                        <button id="send-chat-btn" class="btn btn-primary">📤</button>
                     </div>
                 </div>
 
-                <!-- Panel de Chat -->
-                <div id="chat-panel" class="panel-content" style="display: none;">
-                    <div class="chat-mode-selector">
-                        <label class="switch">
-                            <input type="checkbox" id="chat-mode-switch">
-                            <span class="slider"></span>
-                        </label>
-                        <span id="chat-mode-label" data-i18n="local-chat">Chat Local</span>
+                <!-- Chat de Twitch -->
+                <div id="twitch-chat" class="twitch-chat-container" style="display: none;">
+                    <div class="twitch-setup">
+                        <p data-i18n="connect-twitch">Conecta tu canal de Twitch</p>
+                        <input type="text" id="twitch-channel-input" data-i18n="channel-name" placeholder="Nombre del canal...">
+                        <button id="connect-twitch-btn" class="btn btn-primary" data-i18n="connect">Conectar</button>
                     </div>
-
-                    <!-- Chat Local -->
-                    <div id="local-chat" class="chat-container">
-                        <div id="chat-messages" class="chat-messages"></div>
-                        <div class="chat-input-container">
-                            <input type="text" id="chat-input" data-i18n="type-message" placeholder="Escribe un mensaje..." maxlength="200">
-                            <button id="send-chat-btn" class="btn btn-primary">📤</button>
-                        </div>
-                    </div>
-
-                    <!-- Chat de Twitch -->
-                    <div id="twitch-chat" class="twitch-chat-container" style="display: none;">
-                        <div class="twitch-setup">
-                            <p data-i18n="connect-twitch">Conecta tu canal de Twitch</p>
-                            <input type="text" id="twitch-channel-input" data-i18n="channel-name" placeholder="Nombre del canal...">
-                            <button id="connect-twitch-btn" class="btn btn-primary" data-i18n="connect">Conectar</button>
-                        </div>
-                        <iframe id="twitch-chat-embed" frameborder="0" scrolling="no" style="display: none;"></iframe>
-                    </div>
+                    <iframe id="twitch-chat-embed" frameborder="0" scrolling="no" style="display: none;"></iframe>
                 </div>
             </aside>
         </div>
